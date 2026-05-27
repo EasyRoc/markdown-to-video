@@ -9,6 +9,7 @@ from src.layouts.base import (
     _get_font,
     _hex_to_rgb,
     _wrap_text,
+    draw_progress_bar,
 )
 from src.parser import Segment
 from src.syntax_highlighter import highlight_code as _highlight_code
@@ -51,6 +52,7 @@ class TextOnlyLayout(BaseLayout):
                     continue
                 y += _draw_centered_text(draw, line, body_font, text_color, y, width) + 18
 
+        self._draw_progress(draw, width, height, segment, accent)
         image.save(output_path)
         return str(output_path)
 
@@ -84,6 +86,7 @@ class TextOnlyLayout(BaseLayout):
             y += _draw_centered_text(draw, line, body_font, text_color, y, width) + 14
 
         draw.rectangle([0, height - 8, width, height], fill=accent)
+        self._draw_progress(draw, width, height, segment, accent)
         image.save(output_path)
         return str(output_path)
 
@@ -129,6 +132,7 @@ class TextOnlyLayout(BaseLayout):
                 x += bbox[2] - bbox[0]
             y += cfg["font_size_code"] + 14
 
+        self._draw_progress(draw, width, height, segment, accent)
         image.save(output_path)
         return str(output_path)
 
@@ -142,6 +146,18 @@ class TextOnlyLayout(BaseLayout):
                 draw.text((left, y), line, font=font, fill=text_color)
                 y += 50
             y += 12
+
+    def _draw_progress(self, draw, width, height, segment, accent):
+        durations = [1.0] * (segment.index + 1)
+        draw_progress_bar(
+            draw,
+            width,
+            height,
+            segment.index,
+            segment.index + 1,
+            durations,
+            accent,
+        )
 
 
 def _extract_code_from_text(text: str) -> str:

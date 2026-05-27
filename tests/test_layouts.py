@@ -72,6 +72,16 @@ def test_text_only_renders(tmp_path):
     assert img.size == (800, 600)
 
 
+def test_text_only_draws_progress_bar(tmp_path):
+    seg = Segment(1, "Progress", 2, "section", "Progress\n\nBody.")
+
+    layout = LayoutFactory.create("text-only")
+    path = layout.render(seg, SAMPLE_CFG, tmp_path / "frames")
+    img = Image.open(path)
+
+    assert img.getpixel((10, img.height - 2)) == (74, 144, 217)
+
+
 def test_image_right_renders_with_image(tmp_path):
     img_path = tmp_path / "test_img.png"
     test_img = Image.new("RGB", (400, 300), color=(100, 150, 200))

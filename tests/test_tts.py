@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -79,3 +79,47 @@ async def test_generate_audio_cached(tmp_path):
 
     assert duration == 3.5
     assert seg.duration == 3.5
+
+
+@pytest.mark.asyncio
+async def test_generate_audio_uses_segment_voice(tmp_path):
+    cache_dir = tmp_path / "audio"
+    cache_dir.mkdir()
+    seg = Segment(0, "Test", 1, "title_slide", "Hello")
+    seg.voice = "zh-CN-YunxiNeural"
+    seg.speed = "-20%"
+
+    with patch("src.tts._get_mp3_duration", return_value=2.0):
+        with patch("edge_tts.Communicate") as mock_communicate:
+            mock_communicate.return_value.save = AsyncMock()
+            await generate_audio(
+                seg,
+                {
+                    "tts": {
+                        "voice": "default",
+                        "speed": "+0%",
+                        "pitch": "+0Hz",
+                        "retry": 0,
+                    }
+                },
+                str(cache_dir),
+            )
+
+    call_args = mock_communicate.call_args
+    assert call_args.args[1] == "zh-CN-YunxiNeural"
+    assert call_args.kwargs["rate"] == "-20%"
+
+
+def test_tts_text_for_mermaid():
+    seg = Segment(
+        0,
+        "Diagram",
+        2,
+        "mermaid",
+        "Diagram\n\n```mermaid\ngraph LR\n  A --> B\n```",
+    )
+
+    text = tts_text_for_segment(seg)
+
+    assert "mermaid" not in text.lower()
+    assert "graph LR" not in text

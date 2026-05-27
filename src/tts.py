@@ -13,6 +13,9 @@ def audio_cache_path(text: str, cache_dir: str) -> Path:
 
 
 def tts_text_for_segment(segment: Segment) -> str:
+    if segment.type == "mermaid":
+        title = segment.title or "当前段落"
+        return f"以下是{title}的图表说明"
     if segment.type == "code_block":
         text = _strip_fenced_code(segment.text).strip()
         if text:
@@ -45,6 +48,9 @@ async def generate_audio(
     import edge_tts
 
     tts_config = config.get("tts", {})
+    voice = segment.voice or tts_config.get("voice", "zh-CN-XiaoxiaoNeural")
+    speed = segment.speed or tts_config.get("speed", "+0%")
+    pitch = segment.pitch or tts_config.get("pitch", "+0Hz")
     retry_count = tts_config.get("retry", 1)
     last_error: Exception | None = None
 
@@ -52,9 +58,9 @@ async def generate_audio(
         try:
             communicate = edge_tts.Communicate(
                 text,
-                tts_config.get("voice", "zh-CN-XiaoxiaoNeural"),
-                rate=tts_config.get("speed", "+0%"),
-                pitch=tts_config.get("pitch", "+0Hz"),
+                voice,
+                rate=speed,
+                pitch=pitch,
             )
             await communicate.save(str(cache_path))
             segment.duration = _get_mp3_duration(str(cache_path))
