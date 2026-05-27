@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+import argparse
+import asyncio
+import sys
+from pathlib import Path
+
+from src.composer import compose_video
+from src.config import load_config
+from src.parser import parse_markdown
+from src.renderer import render_segment
+from src.tts import generate_audio
+
+
+async def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Convert markdown files to video with AI voiceover."
+    )
+    parser.add_argument("markdown", help="Path to markdown file")
+    parser.add_argument("-c", "--config", help="Path to config YAML file")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Parse only and show segments without generating media",
+    )
+    args = parser.parse_args()
+
+    md_path = Path(args.markdown)
+    if not md_path.exists():
+        print(f"Error: file not found: {args.markdown}", file=sys.stderr)
+        sys.exit(1)
+
+    text = md_path.read_text(encoding="utf-8")
+    if not text.strip():
+        print("Error: file has no content", file=sys.stderr)
+        sys.exit(1)
+
+    config = load_config(args.config)
+    max_chars = config["render"]["max_chars_per_segment"]
+    segments = parse_markdown(text, max_chars_per_segment=max_chars)
+    if not segments:
+        print("Error: no valid content found in file", file=sys.stderr)
+        sys.exit(1)
+
+    if args.dry_run:
+        for segment in segments:
+            title = segment.title or "(no title)"
+            print(
+                f"Segment {segment.index}: "
+                f"type={segment.type}, title={title}, chars={len(segment.text)}"
+            )
+        return
+
+    output_dir = Path(config["video"]["output_dir"])
+    output_path = output_dir / f"{md_path.stem}.mp4"
+    cache_audio = Path("./cache/audio")
+    cache_frames = Path("./cache/frames")
+
+    print(f"Generating audio for {len(segments)} segments...")
+    for position, segment in enumerate(segments, start=1):
+        title = segment.title or f"segment {segment.index}"
+        print(f"  [{position}/{len(segments)}] {title}")
+        await generate_audio(segment, config, str(cache_audio))
+
+    print(f"Rendering {len(segments)} frames...")
+    for position, segment in enumerate(segments, start=1):
+        print(f"  [{position}/{len(segments)}] segment {segment.index}")
+        render_segment(segment, config, str(cache_frames))
+
+    print("Composing video...")
+    compose_video(
+        segments,
+        str(output_path),
+        config,
+        str(cache_frames),
+        str(cache_audio),
+    )
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
