@@ -38,3 +38,22 @@ def test_cli_dry_run(tmp_path):
 
     assert result.returncode == 0
     assert "Segment" in result.stdout or len(result.stdout) > 0
+
+
+def test_dry_run_shows_annotation_info(tmp_path):
+    md_file = tmp_path / "annotated.md"
+    md_file.write_text(
+        '<!-- {"voice": "zh-CN-YunxiNeural", "layout": "image-right"} -->\n'
+        "# Title\n\nContent.",
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [sys.executable, "main.py", str(md_file), "--dry-run"],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0
+    assert "voice=zh-CN-YunxiNeural" in result.stdout
+    assert "layout=image-right" in result.stdout

@@ -6,9 +6,20 @@ from pathlib import Path
 
 from src.composer import compose_video
 from src.config import load_config
-from src.parser import parse_markdown
+from src.parser import Segment, parse_markdown
 from src.renderer import render_segment
 from src.tts import generate_audio
+
+
+def _segment_tts_config(segment: Segment, config: dict) -> dict:
+    tts_config = dict(config["tts"])
+    if segment.voice:
+        tts_config["voice"] = segment.voice
+    if segment.speed:
+        tts_config["speed"] = segment.speed
+    if segment.pitch:
+        tts_config["pitch"] = segment.pitch
+    return tts_config
 
 
 async def main() -> None:
@@ -44,9 +55,20 @@ async def main() -> None:
     if args.dry_run:
         for segment in segments:
             title = segment.title or "(no title)"
+            extra = []
+            if segment.voice:
+                extra.append(f"voice={segment.voice}")
+            if segment.layout != "text-only":
+                extra.append(f"layout={segment.layout}")
+            if segment.image_path:
+                extra.append(f"image={segment.image_path}")
+            if segment.highlight:
+                extra.append(f"highlight={segment.highlight}")
+            extra_text = ", " + ", ".join(extra) if extra else ""
             print(
                 f"Segment {segment.index}: "
                 f"type={segment.type}, title={title}, chars={len(segment.text)}"
+                f"{extra_text}"
             )
         return
 
@@ -59,7 +81,9 @@ async def main() -> None:
     for position, segment in enumerate(segments, start=1):
         title = segment.title or f"segment {segment.index}"
         print(f"  [{position}/{len(segments)}] {title}")
-        await generate_audio(segment, config, str(cache_audio))
+        tts_config = dict(config)
+        tts_config["tts"] = _segment_tts_config(segment, config)
+        await generate_audio(segment, tts_config, str(cache_audio))
 
     print(f"Rendering {len(segments)} frames...")
     for position, segment in enumerate(segments, start=1):

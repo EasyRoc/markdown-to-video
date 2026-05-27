@@ -82,3 +82,39 @@ def test_empty_markdown():
     segments = parse_markdown("")
 
     assert len(segments) == 0
+
+
+def test_segment_has_v2_fields():
+    from src.parser import Segment
+
+    seg = Segment(0, "Test", 1, "section", "content")
+
+    assert seg.voice is None
+    assert seg.layout == "text-only"
+    assert seg.image_path is None
+    assert seg.transition == "none"
+
+
+def test_mermaid_code_block_gets_mermaid_type():
+    md = "## Diagram\n\n```mermaid\ngraph LR\n  A --> B\n```"
+
+    segments = parse_markdown(md)
+
+    assert segments[0].type == "mermaid"
+
+
+def test_code_block_with_language_is_code_block():
+    md = "## Code\n\n```python\nprint('hello')\n```"
+
+    segments = parse_markdown(md)
+
+    assert segments[0].type == "code_block"
+
+
+def test_parse_markdown_with_annotations_extracts_them():
+    md = '<!-- {"voice": "zh-CN-YunxiNeural"} -->\n\n# Hello\n\nWorld.'
+
+    segments = parse_markdown(md)
+
+    assert segments[0].voice == "zh-CN-YunxiNeural"
+    assert "voice" not in segments[0].text

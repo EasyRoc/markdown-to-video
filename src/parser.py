@@ -3,6 +3,12 @@ import re
 
 import mistune
 
+from src.annotations import (
+    apply_annotations,
+    parse_annotations as _parse_annotations,
+    strip_annotation_comments,
+)
+
 
 @dataclass
 class Segment:
@@ -12,14 +18,28 @@ class Segment:
     type: str
     text: str
     duration: float = 0
+    voice: str | None = None
+    speed: str | None = None
+    pitch: str | None = None
+    image_path: str | None = None
+    layout: str = "text-only"
+    pause_before: float = 0.0
+    pause_after: float = 0.0
+    highlight: str | None = None
+    bgm: str | None = None
+    bgm_volume: float = 0.15
+    transition: str = "none"
 
 
 def parse_markdown(text: str, max_chars_per_segment: int = 200) -> list[Segment]:
     if not text.strip():
         return []
 
+    annotations = _parse_annotations(text)
+    clean_text = strip_annotation_comments(text)
+
     markdown = mistune.create_markdown(renderer="ast")
-    ast = markdown(text)
+    ast = markdown(clean_text)
 
     segments: list[Segment] = []
     current: Segment | None = None
@@ -49,9 +69,10 @@ def parse_markdown(text: str, max_chars_per_segment: int = 200) -> list[Segment]
         if node_type == "block_code":
             current = _ensure_segment(current, segments)
             info = node.get("attrs", {}).get("info", "")
+            seg_type = "mermaid" if info.strip().lower() == "mermaid" else "code_block"
             fence = f"```{info}".rstrip()
             _append_text(current, f"{fence}\n{node.get('raw', '').rstrip()}\n```")
-            current.type = "code_block"
+            current.type = seg_type
             continue
 
         if node_type == "list":
@@ -75,6 +96,7 @@ def parse_markdown(text: str, max_chars_per_segment: int = 200) -> list[Segment]
     segments = _split_long_segments(segments, max_chars_per_segment)
     for index, segment in enumerate(segments):
         segment.index = index
+    segments = apply_annotations(segments, annotations, clean_text)
     return segments
 
 
@@ -137,17 +159,30 @@ def _split_long_segments(
 
         chunks = _split_text(segment.text, max_chars)
         for chunk in chunks:
-            result.append(
-                Segment(
-                    index=0,
-                    title=segment.title,
-                    level=segment.level,
-                    type=segment.type,
-                    text=chunk,
-                    duration=segment.duration,
-                )
-            )
+            result.append(_copy_segment_with_text(segment, chunk))
     return result
+
+
+def _copy_segment_with_text(segment: Segment, text: str) -> Segment:
+    return Segment(
+        index=0,
+        title=segment.title,
+        level=segment.level,
+        type=segment.type,
+        text=text,
+        duration=segment.duration,
+        voice=segment.voice,
+        speed=segment.speed,
+        pitch=segment.pitch,
+        image_path=segment.image_path,
+        layout=segment.layout,
+        pause_before=segment.pause_before,
+        pause_after=segment.pause_after,
+        highlight=segment.highlight,
+        bgm=segment.bgm,
+        bgm_volume=segment.bgm_volume,
+        transition=segment.transition,
+    )
 
 
 def _split_text(text: str, max_chars: int) -> list[str]:
