@@ -1,0 +1,7 @@
+mistune>=3.1
+edge-tts>=6.1
+Pillow>=11.0
+pyyaml>=6.0
+mutagen>=1.47
+pytest>=8.0
+pytest-asyncio>=0.23
