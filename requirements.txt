@@ -5,3 +5,4 @@ pyyaml>=6.0
 mutagen>=1.47
 pytest>=8.0
 pytest-asyncio>=0.23
+pygments>=2.18

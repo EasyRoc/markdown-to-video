@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import patch
 
 from PIL import Image
 
@@ -88,3 +89,23 @@ def test_render_falls_back_to_text_only_without_image(tmp_path):
 
     assert Path(path).exists()
     assert seg.layout == "text-only"
+
+
+def test_render_mermaid_uses_mermaid_renderer(tmp_path):
+    seg = Segment(
+        0,
+        "Diagram",
+        2,
+        "mermaid",
+        "Diagram\n\n```mermaid\ngraph LR\n  A --> B\n```",
+    )
+
+    with patch("src.mermaid_renderer.render_mermaid") as mock_render:
+        mermaid_png = tmp_path / "mermaid_0000.png"
+        Image.new("RGB", (200, 100), color=(80, 120, 160)).save(mermaid_png)
+        mock_render.return_value = str(mermaid_png)
+        path = render_segment(seg, SAMPLE_CFG, str(tmp_path))
+
+    assert mock_render.called
+    assert Path(path).exists()
+    assert seg.layout == "image-below"

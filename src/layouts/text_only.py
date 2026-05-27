@@ -11,6 +11,7 @@ from src.layouts.base import (
     _wrap_text,
 )
 from src.parser import Segment
+from src.syntax_highlighter import highlight_code as _highlight_code
 
 
 class TextOnlyLayout(BaseLayout):
@@ -114,11 +115,18 @@ class TextOnlyLayout(BaseLayout):
         if description:
             y += 26
 
+        language = _extract_code_language(segment.text)
         code = _extract_code_from_text(segment.text)
-        for line in code.splitlines()[:16]:
+        highlighted = _highlight_code(code, language)
+        for line_tokens in highlighted[:16]:
             if y > height - 70:
                 break
-            draw.text((80, y), line.rstrip(), font=code_font, fill=light_text)
+            x = 80
+            for color_hex, text in line_tokens:
+                color = _hex_to_rgb(color_hex)
+                draw.text((x, y), text, font=code_font, fill=color)
+                bbox = draw.textbbox((0, 0), text, font=code_font)
+                x += bbox[2] - bbox[0]
             y += cfg["font_size_code"] + 14
 
         image.save(output_path)
@@ -146,6 +154,14 @@ def _extract_code_from_text(text: str) -> str:
         if in_code:
             code_lines.append(line)
     return "\n".join(code_lines) if code_lines else text
+
+
+def _extract_code_language(text: str) -> str:
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("```") and stripped != "```":
+            return stripped[3:].strip() or "text"
+    return "text"
 
 
 def _extract_non_code_text(text: str) -> str:
