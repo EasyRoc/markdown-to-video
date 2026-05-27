@@ -7,7 +7,7 @@ tts:
 render:
   width: 1920
   height: 1080
-  font_family: "/System/Library/Fonts/PingFang.ttc"
+  font_family: "/System/Library/Fonts/STHeiti Medium.ttc"
   font_family_mono: "/System/Library/Fonts/SFNSMono.ttf"
   font_size_title: 72
   font_size_body: 40

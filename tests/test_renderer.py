@@ -1,9 +1,10 @@
 from pathlib import Path
+from hashlib import md5
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from src.parser import Segment
-from src.renderer import _hex_to_rgb, render_segment
+from src.renderer import _get_font, _hex_to_rgb, render_segment
 
 
 def _render_config(width=800, height=600):
@@ -29,6 +30,14 @@ def test_hex_to_rgb():
     assert _hex_to_rgb("#ff0000") == (255, 0, 0)
     assert _hex_to_rgb("#4A90D9") == (74, 144, 217)
     assert _hex_to_rgb("#1e1e1e") == (30, 30, 30)
+
+
+def test_font_fallback_supports_distinct_chinese_glyphs():
+    font = _get_font("/missing/font.ttf", 48)
+
+    hashes = {_glyph_hash(font, char) for char in "中文测试"}
+
+    assert len(hashes) == 4
 
 
 def test_render_title_slide(tmp_path):
@@ -77,3 +86,10 @@ def test_render_list(tmp_path):
     path = render_segment(seg, _render_config(), str(tmp_path))
 
     assert Path(path).exists()
+
+
+def _glyph_hash(font, char: str) -> str:
+    image = Image.new("L", (80, 80), 0)
+    draw = ImageDraw.Draw(image)
+    draw.text((10, 10), char, font=font, fill=255)
+    return md5(image.tobytes()).hexdigest()

@@ -5,6 +5,9 @@ from PIL import Image, ImageDraw, ImageFont
 from src.parser import Segment
 
 
+CJK_SAMPLE = "中文测试"
+
+
 def render_segment(segment: Segment, config: dict, cache_dir: str) -> str:
     render_config = config["render"]
     output_path = Path(cache_dir) / f"segment_{segment.index:04d}.png"
@@ -32,18 +35,40 @@ def _hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
 def _get_font(font_path: str, size: int):
     candidates = [
         font_path,
-        "/System/Library/Fonts/PingFang.ttc",
+        "/System/Library/Fonts/STHeiti Medium.ttc",
+        "/System/Library/Fonts/STHeiti Light.ttc",
+        "/System/Library/Fonts/Supplemental/Songti.ttc",
+        "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
         "/System/Library/Fonts/SFNS.ttf",
         "/System/Library/Fonts/Helvetica.ttc",
-        "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        "/System/Library/Fonts/PingFang.ttc",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     ]
+    loaded_fonts = []
     for candidate in candidates:
         try:
-            return ImageFont.truetype(candidate, size=size)
+            font = ImageFont.truetype(candidate, size=size)
         except Exception:
             continue
+        loaded_fonts.append(font)
+        if _font_has_distinct_cjk_glyphs(font):
+            return font
+
+    if loaded_fonts:
+        return loaded_fonts[0]
     return ImageFont.load_default()
+
+
+def _font_has_distinct_cjk_glyphs(font) -> bool:
+    glyphs = {_glyph_bytes(font, char) for char in CJK_SAMPLE}
+    return len(glyphs) == len(CJK_SAMPLE)
+
+
+def _glyph_bytes(font, char: str) -> bytes:
+    image = Image.new("L", (96, 96), 0)
+    draw = ImageDraw.Draw(image)
+    draw.text((12, 12), char, font=font, fill=255)
+    return image.tobytes()
 
 
 def _render_title_slide(segment: Segment, cfg: dict, output_path: Path) -> None:
