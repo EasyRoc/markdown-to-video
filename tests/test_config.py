@@ -22,3 +22,14 @@ def test_load_config_cli_overrides():
 
     assert config["tts"]["speed"] == "+20%"
     assert config["tts"]["voice"] == "zh-CN-XiaoxiaoNeural"
+
+
+def test_v2_config_sections_exist():
+    config = load_config()
+
+    assert "image" in config
+    assert "audio" in config
+    assert "highlight" in config
+    assert "code_highlight" in config
+    assert config["audio"]["smart_pauses"]["after_title"] == 1.0
+    assert config["video"]["default_transition"] == "fade"

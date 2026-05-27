@@ -31,6 +31,36 @@ DEFAULT_CONFIG = {
         "audio_codec": "aac",
         "audio_bitrate": "192k",
         "output_dir": "./output",
+        "default_transition": "fade",
+        "transition_duration": 0.5,
+        "progress_bar": True,
+    },
+    "image": {
+        "assets_dir": "./assets/images",
+        "manifest_file": "./assets/images/manifest.yaml",
+    },
+    "highlight": {
+        "font_scale": 1.15,
+        "color_override": None,
+    },
+    "code_highlight": {
+        "theme": "monokai",
+        "line_numbers": True,
+    },
+    "audio": {
+        "default_bgm": None,
+        "bgm_volume": 0.15,
+        "ducking": {
+            "enabled": True,
+            "reduction_db": 12,
+            "attack_ms": 150,
+            "release_ms": 400,
+        },
+        "smart_pauses": {
+            "after_title": 1.0,
+            "around_code": 0.5,
+            "between_list_items": 0.2,
+        },
     },
 }
 
