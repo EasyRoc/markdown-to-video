@@ -47,6 +47,8 @@ def _segment_text(scene: Scene) -> str:
         return f"{visual.title}\n\n{scene.narration}\n\n{fence}\n{visual.payload}\n```"
     if visual.type == "mermaid":
         return f"{visual.title}\n\n{scene.narration}\n\n```mermaid\n{visual.payload}\n```"
+    if visual.payload.strip() == scene.narration.strip():
+        return f"{visual.title}\n\n{scene.narration}".strip()
     return f"{visual.title}\n\n{scene.narration}\n\n{visual.payload}".strip()
 
 

@@ -32,6 +32,29 @@ def test_text_scene_becomes_section_segment_with_narration():
     assert segments[0].highlight == "spoken"
 
 
+def test_text_scene_does_not_duplicate_matching_payload_and_narration():
+    storyboard = Storyboard(
+        title="Demo",
+        planner="rules",
+        source_hash="abc123",
+        scenes=[
+            Scene(
+                id="scene-001",
+                kind="concept",
+                source_section="Intro",
+                source_block_index=0,
+                narration="Same spoken text.",
+                visual=VisualInstruction("text", "Intro", "Same spoken text."),
+                duration_hint=3.0,
+            )
+        ],
+    )
+
+    segment = storyboard_to_segments(storyboard)[0]
+
+    assert segment.text.count("Same spoken text.") == 1
+
+
 def test_title_scene_becomes_title_slide():
     storyboard = Storyboard(
         title="Demo",
