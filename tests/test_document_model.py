@@ -147,6 +147,20 @@ def test_annotations_apply_to_all_blocks_in_multi_block_section():
     ]
 
 
+def test_later_annotated_segment_does_not_overwrite_heading_section_provenance():
+    md = '# H\n\nFirst\n\n---\n\n<!-- {"voice": "two"} -->\nSecond\n'
+
+    model = build_document_model(md)
+
+    section = model.sections[0]
+    assert section.source_segment_index == 0
+    assert section.annotations == {}
+    assert section.blocks[0].source_segment_index == 0
+    assert section.blocks[0].annotations == {}
+    assert section.blocks[1].source_segment_index == 1
+    assert section.blocks[1].annotations == {"voice": "two"}
+
+
 def test_code_fence_info_uses_first_token_as_language():
     md = "```python linenums\nprint('hello')\n```"
 

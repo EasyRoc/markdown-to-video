@@ -24,6 +24,8 @@ def build_document_model(text: str) -> DocumentModel:
     )
     current: DocumentSection | None = None
     current_segment: Segment | None = None
+    # Headings and blocks advance independently: a section can contain many AST blocks
+    # in one parser segment, while thematic breaks can move later blocks forward.
     heading_cursor = 0
     block_cursor = 0
 
@@ -67,7 +69,7 @@ def build_document_model(text: str) -> DocumentModel:
         if current is None:
             current = DocumentSection(heading="", level=0)
             model.sections.append(current)
-        if block.source_segment_index >= 0 and not current.annotations:
+        if block.source_segment_index >= 0 and current.source_segment_index < 0:
             segment = segments[block.source_segment_index]
             current.annotations = _segment_annotations(segment, explicit_keys_by_segment)
             current.source_segment_index = segment.index
