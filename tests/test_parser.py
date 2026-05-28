@@ -118,3 +118,42 @@ def test_parse_markdown_with_annotations_extracts_them():
 
     assert segments[0].voice == "zh-CN-YunxiNeural"
     assert "voice" not in segments[0].text
+
+
+def test_inline_image_sets_image_path_and_layout():
+    md = "## Screenshot\n\nHere is the result:\n\n![Result Image](assets/screenshot.png)"
+
+    segments = parse_markdown(md)
+
+    assert segments[0].image_path == "assets/screenshot.png"
+    assert segments[0].layout == "image-below"
+
+
+def test_inline_image_alt_text_preserved_for_tts():
+    md = "![Architecture Diagram](diagrams/arch.png)"
+
+    segments = parse_markdown(md)
+
+    assert "Architecture Diagram" in segments[0].text
+
+
+def test_paragraph_without_image_unchanged():
+    md = "## Section\n\nJust plain text without images."
+
+    segments = parse_markdown(md)
+
+    assert segments[0].image_path is None
+    assert segments[0].layout == "text-only"
+
+
+def test_annotation_layout_overrides_image_layout():
+    md = (
+        '<!-- {"layout": "image-right"} -->\n'
+        "## Diagram\n\n"
+        "![diagram](img/diagram.png)"
+    )
+
+    segments = parse_markdown(md)
+
+    assert segments[0].image_path == "img/diagram.png"
+    assert segments[0].layout == "image-right"

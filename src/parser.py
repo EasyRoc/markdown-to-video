@@ -64,6 +64,11 @@ def parse_markdown(text: str, max_chars_per_segment: int = 200) -> list[Segment]
         if node_type == "paragraph":
             current = _ensure_segment(current, segments)
             _append_text(current, _extract_text(node).strip())
+            image_url = _extract_first_image_url(node)
+            if image_url and not current.image_path:
+                current.image_path = image_url
+                if current.layout == "text-only":
+                    current.layout = "image-below"
             continue
 
         if node_type == "block_code":
@@ -133,6 +138,16 @@ def _extract_text(node: dict) -> str:
         elif "children" in child:
             parts.append(_extract_text(child))
     return "".join(parts)
+
+
+def _extract_first_image_url(node: dict) -> str | None:
+    if node.get("type") == "image":
+        return node.get("attrs", {}).get("url")
+    for child in node.get("children", []) or []:
+        url = _extract_first_image_url(child)
+        if url:
+            return url
+    return None
 
 
 def _extract_list_text(node: dict) -> str:
