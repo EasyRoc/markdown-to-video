@@ -125,6 +125,28 @@ def test_repeated_text_after_thematic_break_matches_later_segment():
     assert second_block.annotations == {"voice": "two"}
 
 
+def test_annotations_apply_to_all_blocks_in_multi_block_section():
+    md = (
+        '<!-- {"voice": "zh-CN-YunxiNeural"} -->\n'
+        "# H\n\n"
+        "Para one.\n\n"
+        "Para two.\n\n"
+        "```python\n"
+        'print("hi")\n'
+        "```\n"
+    )
+
+    model = build_document_model(md)
+
+    blocks = model.sections[0].blocks
+    assert [block.source_segment_index for block in blocks] == [0, 0, 0]
+    assert [block.annotations for block in blocks] == [
+        {"voice": "zh-CN-YunxiNeural"},
+        {"voice": "zh-CN-YunxiNeural"},
+        {"voice": "zh-CN-YunxiNeural"},
+    ]
+
+
 def test_code_fence_info_uses_first_token_as_language():
     md = "```python linenums\nprint('hello')\n```"
 

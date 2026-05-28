@@ -49,6 +49,12 @@ def build_document_model(text: str) -> DocumentModel:
             model.sections.append(current)
             continue
 
+        if node_type == "thematic_break":
+            if current_segment is not None:
+                block_cursor = max(block_cursor, current_segment.index + 1)
+            current_segment = None
+            continue
+
         block = _block_from_node(
             node,
             segments,
@@ -67,7 +73,9 @@ def build_document_model(text: str) -> DocumentModel:
             current.source_segment_index = segment.index
             current_segment = segment
         if block.source_segment_index >= 0:
-            block_cursor = max(block_cursor, block.source_segment_index + 1)
+            segment = segments[block.source_segment_index]
+            current_segment = segment
+            block_cursor = max(block_cursor, segment.index)
         current.blocks.append(block)
 
     return model
