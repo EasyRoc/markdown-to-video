@@ -33,3 +33,14 @@ def test_v2_config_sections_exist():
     assert "code_highlight" in config
     assert config["audio"]["smart_pauses"]["after_title"] == 1.0
     assert config["video"]["default_transition"] == "fade"
+
+
+def test_v3_teaching_director_config_exists():
+    config = load_config()
+
+    assert config["teaching_director"]["enabled"] is False
+    assert config["teaching_director"]["planner"] == "rules"
+    assert config["teaching_director"]["max_scenes_per_section"] == 6
+    assert config["teaching_director"]["code_focus"]["enabled"] is True
+    assert config["teaching_director"]["diagrams"]["enabled"] is True
+    assert config["teaching_director"]["cache_dir"] == "./cache"

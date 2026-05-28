@@ -53,3 +53,20 @@ audio:
     after_title: 1.0
     around_code: 0.5
     between_list_items: 0.2
+
+teaching_director:
+  enabled: false
+  planner: "rules"
+  cache_dir: "./cache"
+  max_scenes_per_section: 6
+  code_focus:
+    enabled: true
+    max_focus_lines: 4
+  diagrams:
+    enabled: true
+    prefer_mermaid: true
+  llm:
+    enabled: false
+    provider: "openai"
+    model: ""
+    timeout_seconds: 30

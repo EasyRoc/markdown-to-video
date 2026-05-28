@@ -62,6 +62,26 @@ DEFAULT_CONFIG = {
             "between_list_items": 0.2,
         },
     },
+    "teaching_director": {
+        "enabled": False,
+        "planner": "rules",
+        "cache_dir": "./cache",
+        "max_scenes_per_section": 6,
+        "code_focus": {
+            "enabled": True,
+            "max_focus_lines": 4,
+        },
+        "diagrams": {
+            "enabled": True,
+            "prefer_mermaid": True,
+        },
+        "llm": {
+            "enabled": False,
+            "provider": "openai",
+            "model": "",
+            "timeout_seconds": 30,
+        },
+    },
 }
 
 
