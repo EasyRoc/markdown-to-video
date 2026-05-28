@@ -8,6 +8,11 @@ from src.composer import compose_video
 from src.config import load_config
 from src.parser import Segment, parse_markdown
 from src.renderer import render_segment
+from src.teaching_pipeline import (
+    build_teaching_assets,
+    dry_run_summary,
+    write_dry_run_artifacts,
+)
 from src.tts import generate_audio
 
 
@@ -33,6 +38,11 @@ async def main() -> None:
         action="store_true",
         help="Parse only and show segments without generating media",
     )
+    parser.add_argument(
+        "--v3",
+        action="store_true",
+        help="Use the V3 teaching director before rendering",
+    )
     args = parser.parse_args()
 
     md_path = Path(args.markdown)
@@ -47,29 +57,41 @@ async def main() -> None:
 
     config = load_config(args.config)
     max_chars = config["render"]["max_chars_per_segment"]
-    segments = parse_markdown(text, max_chars_per_segment=max_chars)
+    assets = None
+
+    if args.v3:
+        assets = build_teaching_assets(text, config)
+        segments = assets.segments
+    else:
+        segments = parse_markdown(text, max_chars_per_segment=max_chars)
+
     if not segments:
         print("Error: no valid content found in file", file=sys.stderr)
         sys.exit(1)
 
     if args.dry_run:
-        for segment in segments:
-            title = segment.title or "(no title)"
-            extra = []
-            if segment.voice:
-                extra.append(f"voice={segment.voice}")
-            if segment.layout != "text-only":
-                extra.append(f"layout={segment.layout}")
-            if segment.image_path:
-                extra.append(f"image={segment.image_path}")
-            if segment.highlight:
-                extra.append(f"highlight={segment.highlight}")
-            extra_text = ", " + ", ".join(extra) if extra else ""
-            print(
-                f"Segment {segment.index}: "
-                f"type={segment.type}, title={title}, chars={len(segment.text)}"
-                f"{extra_text}"
-            )
+        if args.v3:
+            print(dry_run_summary(assets))
+            paths = write_dry_run_artifacts(assets, config)
+            print(f"Artifacts written to: {paths['storyboard'].parent.parent}")
+        else:
+            for segment in segments:
+                title = segment.title or "(no title)"
+                extra = []
+                if segment.voice:
+                    extra.append(f"voice={segment.voice}")
+                if segment.layout != "text-only":
+                    extra.append(f"layout={segment.layout}")
+                if segment.image_path:
+                    extra.append(f"image={segment.image_path}")
+                if segment.highlight:
+                    extra.append(f"highlight={segment.highlight}")
+                extra_text = ", " + ", ".join(extra) if extra else ""
+                print(
+                    f"Segment {segment.index}: "
+                    f"type={segment.type}, title={title}, chars={len(segment.text)}"
+                    f"{extra_text}"
+                )
         return
 
     output_dir = Path(config["video"]["output_dir"])
