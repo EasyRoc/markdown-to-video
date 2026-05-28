@@ -24,17 +24,19 @@ def build_document_model(text: str) -> DocumentModel:
     )
     current: DocumentSection | None = None
     current_segment: Segment | None = None
-    segment_cursor = 0
+    heading_cursor = 0
+    block_cursor = 0
 
     for node in ast:
         node_type = node["type"]
         if node_type == "heading":
             heading = _extract_text(node).strip()
             level = node.get("attrs", {}).get("level", 0)
-            segment = _find_segment_for_heading(heading, segments, segment_cursor)
+            segment = _find_segment_for_heading(heading, segments, heading_cursor)
             current_segment = segment
             if segment is not None:
-                segment_cursor = segment.index + 1
+                heading_cursor = segment.index + 1
+                block_cursor = segment.index
             annotations = _segment_annotations(segment, explicit_keys_by_segment)
             if level == 1 and not model.title:
                 model.title = heading
@@ -51,7 +53,7 @@ def build_document_model(text: str) -> DocumentModel:
             node,
             segments,
             current_segment,
-            segment_cursor,
+            block_cursor,
             explicit_keys_by_segment,
         )
         if block is None:
@@ -65,7 +67,7 @@ def build_document_model(text: str) -> DocumentModel:
             current.source_segment_index = segment.index
             current_segment = segment
         if block.source_segment_index >= 0:
-            segment_cursor = max(segment_cursor, block.source_segment_index + 1)
+            block_cursor = max(block_cursor, block.source_segment_index + 1)
         current.blocks.append(block)
 
     return model
@@ -166,7 +168,12 @@ def _find_segment_containing(
     if not text:
         return None
     needle = text.strip().splitlines()[0].strip()
-    if current_segment is not None and needle and needle in current_segment.text:
+    if (
+        current_segment is not None
+        and current_segment.index >= start_index
+        and needle
+        and needle in current_segment.text
+    ):
         return current_segment
     for segment in segments[start_index:]:
         if needle and needle in segment.text:

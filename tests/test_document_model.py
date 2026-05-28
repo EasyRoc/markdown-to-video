@@ -108,6 +108,23 @@ def test_duplicate_headings_preserve_matching_explicit_default_annotations():
     assert model.sections[1].blocks[0].annotations == {"bgm_volume": 0.15}
 
 
+def test_repeated_text_after_thematic_break_matches_later_segment():
+    md = (
+        '<!-- {"voice": "one"} -->\n'
+        "# H\n\n"
+        "Same\n\n"
+        "---\n\n"
+        '<!-- {"voice": "two"} -->\n'
+        "Same\n"
+    )
+
+    model = build_document_model(md)
+
+    second_block = model.sections[0].blocks[1]
+    assert second_block.source_segment_index == 1
+    assert second_block.annotations == {"voice": "two"}
+
+
 def test_code_fence_info_uses_first_token_as_language():
     md = "```python linenums\nprint('hello')\n```"
 
