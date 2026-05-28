@@ -22,6 +22,10 @@ def tts_text_for_segment(segment: Segment) -> str:
             return text
         title = segment.title or "当前段落"
         return f"以下是{title}的示例代码"
+    if segment.type == "table":
+        return segment.text.strip()
+    if segment.image_path:
+        return _image_narration(segment)
     return segment.text.strip()
 
 
@@ -82,6 +86,30 @@ def _strip_fenced_code(text: str) -> str:
         if not in_code:
             lines.append(line)
     return "\n".join(lines)
+
+
+def _image_narration(segment: Segment) -> str:
+    """Generate a brief oral narration for an image-based segment.
+
+    Instead of reading raw alt text verbatim, produces natural phrasing like
+    "运行结果。（如图）" so the voiceover feels like a person explaining a visual.
+    """
+    title = segment.title or ""
+    body = segment.text
+
+    if title and body.startswith(title):
+        body = body[len(title):].strip()
+
+    body_lines = [line.strip() for line in body.splitlines() if line.strip()]
+    body_text = "。".join(line for line in body_lines if line) if body_lines else ""
+
+    if title and body_text:
+        return f"{title}。{body_text}。（如图）"
+    if title:
+        return f"来看{title}的配图"
+    if body_text:
+        return f"{body_text}。（如图）"
+    return "如图所示"
 
 
 def _should_skip_tts(text: str) -> bool:

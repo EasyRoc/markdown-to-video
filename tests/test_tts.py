@@ -139,3 +139,71 @@ def test_tts_text_for_table_uses_summary_not_raw_markdown():
 
     assert "这张表格包含" in text
     assert "|" not in text
+
+
+def test_tts_text_for_image_uses_narration_not_raw_alt():
+    seg = Segment(
+        0,
+        "架构图",
+        2,
+        "section",
+        "架构图\n\n系统整体架构示意",
+    )
+    seg.image_path = "assets/arch.png"
+    seg.layout = "image-below"
+
+    text = tts_text_for_segment(seg)
+
+    assert "架构图" in text
+    assert "如图" in text
+
+
+def test_tts_text_for_image_with_body_text():
+    seg = Segment(
+        0,
+        "运行结果",
+        2,
+        "section",
+        "运行结果\n\n执行命令后可以看到如下输出：\n\nResult Image",
+    )
+    seg.image_path = "assets/screenshot.png"
+    seg.layout = "image-below"
+
+    text = tts_text_for_segment(seg)
+
+    assert "执行命令后" in text
+    assert "如图" in text
+
+
+def test_tts_text_for_image_title_only():
+    seg = Segment(
+        0,
+        "示意图",
+        2,
+        "section",
+        "示意图",
+    )
+    seg.image_path = "assets/diagram.png"
+    seg.layout = "image-below"
+
+    text = tts_text_for_segment(seg)
+
+    assert "示意图" in text
+    assert "配图" in text or "图" in text
+
+
+def test_tts_text_for_table_with_image_uses_table_summary():
+    """Table takes priority over image_path — table summary is already correct."""
+    seg = Segment(
+        0,
+        "对比表",
+        2,
+        "table",
+        "对比表\n\n这张表格包含 2 列、3 行数据。",
+    )
+    seg.image_path = "assets/table-preview.png"
+    seg.table_data = [["A", "B"], ["1", "2"], ["3", "4"]]
+
+    text = tts_text_for_segment(seg)
+
+    assert "这张表格包含" in text
