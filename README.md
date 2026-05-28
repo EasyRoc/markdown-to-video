@@ -48,6 +48,23 @@ python main.py my-tutorial.md -c my-config.yaml
 
 输出视频与 markdown 同名：`my-tutorial.md` → `output/my-tutorial.mp4`
 
+### V3 教学导演模式
+
+V3 会先把 Markdown 转成教学讲稿、分镜和时间线，再复用现有渲染与合成流程：
+
+```bash
+python main.py my-tutorial.md --v3
+python main.py my-tutorial.md --v3 --dry-run
+```
+
+`--v3 --dry-run` 会输出 storyboard 摘要，并写入这些调试文件：
+
+- `cache/script/<source-hash>.json`
+- `cache/storyboard/<source-hash>.json`
+- `cache/timeline/<source-hash>.json`
+
+默认情况下，不加 `--v3` 仍然使用原有 V2 分段渲染流程。
+
 ## 配置
 
 编辑 `config.yaml` 自定义生成效果：
