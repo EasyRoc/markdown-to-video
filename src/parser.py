@@ -1,5 +1,7 @@
 from dataclasses import dataclass
+from pathlib import Path
 import re
+from urllib.parse import urlparse
 
 import mistune
 
@@ -31,7 +33,11 @@ class Segment:
     transition: str = "none"
 
 
-def parse_markdown(text: str, max_chars_per_segment: int = 200) -> list[Segment]:
+def parse_markdown(
+    text: str,
+    max_chars_per_segment: int = 200,
+    source_dir: str | Path | None = None,
+) -> list[Segment]:
     if not text.strip():
         return []
 
@@ -66,7 +72,7 @@ def parse_markdown(text: str, max_chars_per_segment: int = 200) -> list[Segment]
             _append_text(current, _extract_text(node).strip())
             image_url = _extract_first_image_url(node)
             if image_url and not current.image_path:
-                current.image_path = image_url
+                current.image_path = _resolve_markdown_image_url(image_url, source_dir)
                 if current.layout == "text-only":
                     current.layout = "image-below"
             continue
@@ -148,6 +154,17 @@ def _extract_first_image_url(node: dict) -> str | None:
         if url:
             return url
     return None
+
+
+def _resolve_markdown_image_url(image_url: str, source_dir: str | Path | None) -> str:
+    parsed = urlparse(image_url)
+    if parsed.scheme or source_dir is None:
+        return image_url
+
+    path = Path(image_url).expanduser()
+    if path.is_absolute():
+        return str(path)
+    return str((Path(source_dir) / path).resolve())
 
 
 def _extract_list_text(node: dict) -> str:

@@ -24,6 +24,18 @@ def test_build_teaching_assets_expands_sample_into_storyboard_and_segments():
     assert any(segment.type == "code_block" for segment in assets.segments)
 
 
+def test_build_teaching_assets_resolves_markdown_image_relative_to_source_dir(tmp_path):
+    image_dir = tmp_path / "assets"
+    image_dir.mkdir()
+    image_path = image_dir / "pipeline.png"
+    image_path.write_bytes(b"placeholder")
+    markdown = "# Demo\n\n## Flow\n\n![Pipeline](assets/pipeline.png)"
+
+    assets = build_teaching_assets(markdown, load_config(), source_dir=tmp_path)
+
+    assert any(segment.image_path == str(image_path) for segment in assets.segments)
+
+
 def test_dry_run_summary_lists_storyboard_scenes():
     assets = build_teaching_assets(
         "## Intro\n\nA short explanation.",

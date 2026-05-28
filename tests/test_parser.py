@@ -129,6 +129,18 @@ def test_inline_image_sets_image_path_and_layout():
     assert segments[0].layout == "image-below"
 
 
+def test_inline_image_resolves_relative_to_source_dir(tmp_path):
+    image_dir = tmp_path / "assets"
+    image_dir.mkdir()
+    image_path = image_dir / "screenshot.png"
+    image_path.write_bytes(b"placeholder")
+    md = "## Screenshot\n\n![Result Image](assets/screenshot.png)"
+
+    segments = parse_markdown(md, source_dir=tmp_path)
+
+    assert segments[0].image_path == str(image_path)
+
+
 def test_inline_image_alt_text_preserved_for_tts():
     md = "![Architecture Diagram](diagrams/arch.png)"
 

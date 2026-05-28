@@ -2,6 +2,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
+from src.image_loader import load_image
 from src.layouts.base import (
     BaseLayout,
     _body_without_title,
@@ -52,7 +53,7 @@ class ImageRightLayout(BaseLayout):
 
         if segment.image_path:
             try:
-                source = Image.open(segment.image_path).convert("RGB")
+                source = load_image(segment.image_path)
                 fitted = _fit_image(source, image_width, image_height)
                 image.paste(
                     fitted,

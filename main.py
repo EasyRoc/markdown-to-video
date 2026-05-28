@@ -50,6 +50,7 @@ async def main() -> None:
         print(f"Error: file not found: {args.markdown}", file=sys.stderr)
         sys.exit(1)
 
+    md_path = md_path.resolve()
     text = md_path.read_text(encoding="utf-8")
     if not text.strip():
         print("Error: file has no content", file=sys.stderr)
@@ -60,10 +61,14 @@ async def main() -> None:
     assets = None
 
     if args.v3:
-        assets = build_teaching_assets(text, config)
+        assets = build_teaching_assets(text, config, source_dir=md_path.parent)
         segments = assets.segments
     else:
-        segments = parse_markdown(text, max_chars_per_segment=max_chars)
+        segments = parse_markdown(
+            text,
+            max_chars_per_segment=max_chars,
+            source_dir=md_path.parent,
+        )
 
     if not segments:
         print("Error: no valid content found in file", file=sys.stderr)

@@ -1,4 +1,5 @@
 import hashlib
+from pathlib import Path
 from typing import Any
 
 import mistune
@@ -12,10 +13,13 @@ from src.parser import Segment, parse_markdown
 from src.teaching_models import DocumentBlock, DocumentModel, DocumentSection
 
 
-def build_document_model(text: str) -> DocumentModel:
+def build_document_model(
+    text: str,
+    source_dir: str | Path | None = None,
+) -> DocumentModel:
     clean_text = strip_annotation_comments(text)
     ast = mistune.create_markdown(renderer="ast")(clean_text)
-    segments = parse_markdown(text, max_chars_per_segment=0)
+    segments = parse_markdown(text, max_chars_per_segment=0, source_dir=source_dir)
     explicit_keys_by_segment = _explicit_annotation_keys_by_segment(text, segments)
 
     model = DocumentModel(

@@ -135,6 +135,28 @@ def test_image_below_renders(tmp_path):
     assert img.size == (800, 600)
 
 
+def test_image_below_renders_svg_image(tmp_path):
+    svg_path = tmp_path / "diagram.svg"
+    svg_path.write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="220">'
+        '<rect width="600" height="220" fill="#e00000"/></svg>',
+        encoding="utf-8",
+    )
+
+    seg = Segment(0, "Chart", 2, "section", "Chart")
+    seg.layout = "image-below"
+    seg.image_path = str(svg_path)
+
+    layout = LayoutFactory.create("image-below")
+    path = layout.render(seg, SAMPLE_CFG, tmp_path / "frames")
+
+    img = Image.open(path)
+    red, green, blue = img.getpixel((400, 450))
+    assert red > 180
+    assert green < 80
+    assert blue < 80
+
+
 def test_image_full_renders(tmp_path):
     img_path = tmp_path / "bg_img.png"
     Image.new("RGB", (800, 600), color=(50, 50, 80)).save(img_path)

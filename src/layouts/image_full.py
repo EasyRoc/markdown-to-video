@@ -2,6 +2,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
+from src.image_loader import load_image
 from src.layouts.base import BaseLayout, _draw_centered_text, _get_font, _hex_to_rgb
 from src.parser import Segment
 
@@ -41,7 +42,7 @@ class ImageFullLayout(BaseLayout):
     def _load_background(self, segment: Segment, cfg: dict, width: int, height: int) -> Image.Image:
         if segment.image_path:
             try:
-                return Image.open(segment.image_path).convert("RGB").resize(
+                return load_image(segment.image_path).resize(
                     (width, height),
                     Image.LANCZOS,
                 )

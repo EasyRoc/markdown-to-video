@@ -19,8 +19,12 @@ class TeachingAssets:
     segments: list
 
 
-def build_teaching_assets(text: str, config: dict) -> TeachingAssets:
-    document = build_document_model(text)
+def build_teaching_assets(
+    text: str,
+    config: dict,
+    source_dir: str | Path | None = None,
+) -> TeachingAssets:
+    document = build_document_model(text, source_dir=source_dir)
     planner = create_teaching_planner(config)
     script = planner.plan(document)
     storyboard = build_storyboard(script, config)

@@ -2,6 +2,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
+from src.image_loader import load_image
 from src.layouts.base import (
     BaseLayout,
     _body_without_title,
@@ -44,7 +45,7 @@ class ImageBelowLayout(BaseLayout):
         image_max_height = height - image_top - 20
         if segment.image_path and image_max_height > 100:
             try:
-                source = Image.open(segment.image_path).convert("RGB")
+                source = load_image(segment.image_path)
                 fitted = _fit_image(source, width - 120, image_max_height)
                 image.paste(
                     fitted,
