@@ -95,3 +95,11 @@ def test_mermaid_fence_info_with_extra_tokens_stays_mermaid():
 
     assert model.sections[0].blocks[0].kind == "mermaid"
     assert model.sections[0].blocks[0].language == "mermaid"
+
+
+def test_code_block_preserves_trailing_spaces_in_raw_text():
+    md = "```python\nvalue = 1  \nprint(value)\n```"
+
+    model = build_document_model(md)
+
+    assert "value = 1  \n" in model.sections[0].blocks[0].text
