@@ -4,9 +4,7 @@
 
 ## 工作原理
 
-```
-input.md ──→ ① 解析分段 ──→ ② 生成语音 (edge-tts) ──→ ③ 渲染画面 (Pillow) ──→ ④ 合成视频 (ffmpeg) ──→ output.mp4
-```
+![Pipeline](assets/images/pipeline.svg)
 
 根据 markdown 标题自动分页，每种类型的内容使用不同的画面模板：
 
