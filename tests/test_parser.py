@@ -169,3 +169,39 @@ def test_annotation_layout_overrides_image_layout():
 
     assert segments[0].image_path == "img/diagram.png"
     assert segments[0].layout == "image-right"
+
+
+def test_markdown_table_becomes_table_segment_without_raw_pipe_tts():
+    md = (
+        "## 模板\n\n"
+        "| 类型 | 模板 | 效果 |\n"
+        "|------|------|------|\n"
+        "| `# 一级标题` | 封面页 | 标题居中 + 渐变背景 |\n"
+        "| 列表 | 列表页 | 标题 + 圆点列表 |\n"
+    )
+
+    segments = parse_markdown(md)
+
+    assert segments[0].type == "table"
+    assert segments[0].layout == "table"
+    assert segments[0].table_data == [
+        ["类型", "模板", "效果"],
+        ["# 一级标题", "封面页", "标题居中 + 渐变背景"],
+        ["列表", "列表页", "标题 + 圆点列表"],
+    ]
+    assert "|" not in segments[0].text
+
+
+def test_table_segment_keeps_section_title_after_prior_paragraph():
+    md = (
+        "## 工作原理\n\n"
+        "先介绍整体流程。\n\n"
+        "| 类型 | 模板 |\n"
+        "|------|------|\n"
+        "| 列表 | 列表页 |\n"
+    )
+
+    segments = parse_markdown(md)
+
+    assert segments[1].type == "table"
+    assert segments[1].title == "工作原理"

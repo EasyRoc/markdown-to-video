@@ -31,6 +31,7 @@ class Segment:
     bgm: str | None = None
     bgm_volume: float = 0.15
     transition: str = "none"
+    table_data: list[list[str]] | None = None
 
 
 def parse_markdown(
@@ -44,7 +45,7 @@ def parse_markdown(
     annotations = _parse_annotations(text)
     clean_text = strip_annotation_comments(text)
 
-    markdown = mistune.create_markdown(renderer="ast")
+    markdown = mistune.create_markdown(renderer="ast", plugins=["table"])
     ast = markdown(clean_text)
 
     segments: list[Segment] = []
@@ -95,6 +96,10 @@ def parse_markdown(
         if node_type == "block_quote":
             current = _ensure_segment(current, segments)
             _append_text(current, _extract_text(node).strip())
+            continue
+
+        if node_type == "table":
+            current = _table_segment(current, segments, _extract_table_data(node))
             continue
 
         if node_type == "thematic_break" and current is not None:
@@ -176,6 +181,55 @@ def _extract_list_text(node: dict) -> str:
     return "\n".join(lines)
 
 
+def _extract_table_data(node: dict) -> list[list[str]]:
+    rows: list[list[str]] = []
+    for child in node.get("children", []) or []:
+        child_type = child["type"]
+        if child_type == "table_head":
+            rows.append(
+                [_extract_text(cell).strip() for cell in child.get("children", [])]
+            )
+        elif child_type == "table_body":
+            for row in child.get("children", []) or []:
+                rows.append(
+                    [_extract_text(cell).strip() for cell in row.get("children", [])]
+                )
+    return rows
+
+
+def _table_segment(
+    current: Segment | None,
+    segments: list[Segment],
+    table_data: list[list[str]],
+) -> Segment:
+    title = current.title if current is not None else ""
+    level = current.level if current is not None else 0
+    if (
+        current is not None
+        and current.text.strip()
+        and current.text.strip() != current.title
+    ):
+        segments.append(current)
+        current = None
+
+    segment = _ensure_segment(current, segments)
+    if title and not segment.title:
+        segment.title = title
+        segment.level = level
+    segment.type = "table"
+    segment.layout = "table"
+    segment.table_data = table_data
+    segment.text = _table_summary_text(segment.title, table_data)
+    return segment
+
+
+def _table_summary_text(title: str, table_data: list[list[str]]) -> str:
+    columns = len(table_data[0]) if table_data else 0
+    data_rows = max(0, len(table_data) - 1)
+    summary = f"这张表格包含 {columns} 列、{data_rows} 行数据。"
+    return f"{title}\n\n{summary}".strip() if title else summary
+
+
 def _split_long_segments(
     segments: list[Segment],
     max_chars: int,
@@ -214,6 +268,7 @@ def _copy_segment_with_text(segment: Segment, text: str) -> Segment:
         bgm=segment.bgm,
         bgm_volume=segment.bgm_volume,
         transition=segment.transition,
+        table_data=segment.table_data,
     )
 
 

@@ -21,6 +21,7 @@ class DocumentBlock(JsonModel):
     annotations: dict[str, Any] = field(default_factory=dict)
     source_segment_index: int = -1
     list_items: list[str] = field(default_factory=list)
+    table_data: list[list[str]] = field(default_factory=list)
 
 
 @dataclass
@@ -56,6 +57,13 @@ class DiagramCandidate(JsonModel):
 
 
 @dataclass
+class TableVisual(JsonModel):
+    title: str
+    summary: str
+    table_data: list[list[str]] = field(default_factory=list)
+
+
+@dataclass
 class ScriptSection(JsonModel):
     heading: str
     objective: str
@@ -63,6 +71,7 @@ class ScriptSection(JsonModel):
     narration_blocks: list[str] = field(default_factory=list)
     code_explanations: list[CodeExplanation] = field(default_factory=list)
     diagram_candidates: list[DiagramCandidate] = field(default_factory=list)
+    tables: list[TableVisual] = field(default_factory=list)
     summary: str = ""
     annotations: dict[str, Any] = field(default_factory=dict)
 

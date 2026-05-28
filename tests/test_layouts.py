@@ -4,7 +4,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 from src.layouts import LayoutFactory
-from src.layouts.base import _get_font
+from src.layouts.base import _get_font, _hex_to_rgb
 from src.parser import Segment
 
 
@@ -155,6 +155,23 @@ def test_image_below_renders_svg_image(tmp_path):
     assert red > 180
     assert green < 80
     assert blue < 80
+
+
+def test_table_layout_renders_grid(tmp_path):
+    seg = Segment(0, "模板", 2, "table", "模板\n\n这张表格包含 3 列、2 行数据。")
+    seg.layout = "table"
+    seg.table_data = [
+        ["类型", "模板", "效果"],
+        ["# 一级标题", "封面页", "标题居中 + 渐变背景"],
+        ["列表", "列表页", "标题 + 圆点列表"],
+    ]
+
+    layout = LayoutFactory.create("table")
+    path = layout.render(seg, SAMPLE_CFG, tmp_path / "frames")
+
+    img = Image.open(path)
+    assert img.size == (800, 600)
+    assert img.getpixel((80, 190)) != _hex_to_rgb(SAMPLE_CFG["bg_color"])
 
 
 def test_image_full_renders(tmp_path):

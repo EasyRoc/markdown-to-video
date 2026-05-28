@@ -6,6 +6,7 @@ from src.teaching_models import (
     DocumentBlock,
     DocumentModel,
     ScriptSection,
+    TableVisual,
     TeachingScript,
 )
 
@@ -47,6 +48,11 @@ class RulesTeachingPlanner:
                         _diagram_candidate(section.heading, block)
                         for block in section.blocks
                         if _is_diagram_candidate(block)
+                    ],
+                    tables=[
+                        _table_visual(section.heading, block)
+                        for block in section.blocks
+                        if block.kind == "table"
                     ],
                     summary=_summary_for_heading(section.heading),
                     annotations=section.annotations,
@@ -92,6 +98,15 @@ def _narration_for_blocks(blocks: list[DocumentBlock]) -> list[str]:
         elif block.kind == "list" and block.list_items:
             narration.append("这里有几个重点：" + "；".join(block.list_items) + "。")
     return narration
+
+
+def _table_visual(heading: str, block: DocumentBlock) -> TableVisual:
+    title = heading or "表格"
+    return TableVisual(
+        title=title,
+        summary=block.text,
+        table_data=block.table_data,
+    )
 
 
 def _code_explanation(

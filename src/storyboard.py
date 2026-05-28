@@ -1,3 +1,5 @@
+import json
+
 from src.teaching_models import (
     Scene,
     ScriptSection,
@@ -104,6 +106,25 @@ def _section_scenes(
                 )
             )
             counter += 1
+
+    for table in section.tables:
+        scenes.append(
+            _scene(
+                counter,
+                "table",
+                section.heading,
+                0,
+                table.summary,
+                VisualInstruction(
+                    "table",
+                    table.title,
+                    json.dumps(table.table_data, ensure_ascii=False),
+                ),
+                4.5,
+                section.annotations,
+            )
+        )
+        counter += 1
 
     for explanation in section.code_explanations:
         scenes.append(

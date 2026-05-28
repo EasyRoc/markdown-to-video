@@ -134,3 +134,57 @@ def test_mermaid_scene_becomes_mermaid_segment():
     assert segment.type == "mermaid"
     assert "```mermaid" in segment.text
     assert "graph LR" in segment.text
+
+
+def test_table_scene_becomes_table_segment():
+    storyboard = Storyboard(
+        title="Demo",
+        planner="rules",
+        source_hash="abc123",
+        scenes=[
+            Scene(
+                id="scene-001",
+                kind="table",
+                source_section="模板",
+                source_block_index=0,
+                narration="这张表格包含 3 列、1 行数据。",
+                visual=VisualInstruction(
+                    "table",
+                    "模板",
+                    '[["类型", "模板", "效果"], ["列表", "列表页", "标题 + 圆点列表"]]',
+                ),
+                duration_hint=4.0,
+            )
+        ],
+    )
+
+    segment = storyboard_to_segments(storyboard)[0]
+
+    assert segment.type == "table"
+    assert segment.layout == "table"
+    assert segment.table_data[0] == ["类型", "模板", "效果"]
+
+
+def test_table_scene_keeps_table_layout_when_section_has_image_annotation():
+    storyboard = Storyboard(
+        title="Demo",
+        planner="rules",
+        source_hash="abc123",
+        scenes=[
+            Scene(
+                id="scene-001",
+                kind="table",
+                source_section="模板",
+                source_block_index=0,
+                narration="这张表格包含 2 列、1 行数据。",
+                visual=VisualInstruction("table", "模板", '[["类型", "模板"], ["列表", "列表页"]]'),
+                duration_hint=4.0,
+                annotations={"image": "assets/pipeline.svg", "layout": "image-below"},
+            )
+        ],
+    )
+
+    segment = storyboard_to_segments(storyboard)[0]
+
+    assert segment.layout == "table"
+    assert segment.image_path is None

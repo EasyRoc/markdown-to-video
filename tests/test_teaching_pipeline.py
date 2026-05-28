@@ -36,6 +36,24 @@ def test_build_teaching_assets_resolves_markdown_image_relative_to_source_dir(tm
     assert any(segment.image_path == str(image_path) for segment in assets.segments)
 
 
+def test_build_teaching_assets_keeps_markdown_table_as_visual_segment():
+    markdown = (
+        "# Demo\n\n"
+        "## 模板\n\n"
+        "| 类型 | 模板 | 效果 |\n"
+        "|------|------|------|\n"
+        "| `# 一级标题` | 封面页 | 标题居中 + 渐变背景 |\n"
+    )
+
+    assets = build_teaching_assets(markdown, load_config())
+    table_segments = [segment for segment in assets.segments if segment.type == "table"]
+
+    assert len(table_segments) == 1
+    assert table_segments[0].layout == "table"
+    assert table_segments[0].table_data[0] == ["类型", "模板", "效果"]
+    assert "|" not in table_segments[0].text
+
+
 def test_dry_run_summary_lists_storyboard_scenes():
     assets = build_teaching_assets(
         "## Intro\n\nA short explanation.",

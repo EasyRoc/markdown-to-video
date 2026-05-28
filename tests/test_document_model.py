@@ -185,3 +185,22 @@ def test_code_block_preserves_trailing_spaces_in_raw_text():
     model = build_document_model(md)
 
     assert "value = 1  \n" in model.sections[0].blocks[0].text
+
+
+def test_table_block_preserves_rows():
+    md = (
+        "## 模板\n\n"
+        "| 类型 | 模板 | 效果 |\n"
+        "|------|------|------|\n"
+        "| `# 一级标题` | 封面页 | 标题居中 + 渐变背景 |\n"
+    )
+
+    model = build_document_model(md)
+
+    block = model.sections[0].blocks[0]
+    assert block.kind == "table"
+    assert block.table_data == [
+        ["类型", "模板", "效果"],
+        ["# 一级标题", "封面页", "标题居中 + 渐变背景"],
+    ]
+    assert "|" not in block.text

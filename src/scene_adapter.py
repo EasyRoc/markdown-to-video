@@ -1,3 +1,5 @@
+import json
+
 from src.parser import Segment
 from src.teaching_models import Scene, Storyboard
 
@@ -24,6 +26,10 @@ def _scene_to_segment(index: int, scene: Scene) -> Segment:
         duration=scene.duration_hint,
     )
     _apply_scene_annotations(segment, scene)
+    if visual.type == "table":
+        segment.layout = "table"
+        segment.image_path = None
+        segment.table_data = json.loads(visual.payload or "[]")
     return segment
 
 
@@ -34,6 +40,8 @@ def _segment_type(scene: Scene) -> str:
         return "code_block"
     if scene.visual.type == "mermaid":
         return "mermaid"
+    if scene.visual.type == "table":
+        return "table"
     return "section"
 
 
@@ -47,6 +55,8 @@ def _segment_text(scene: Scene) -> str:
         return f"{visual.title}\n\n{scene.narration}\n\n{fence}\n{visual.payload}\n```"
     if visual.type == "mermaid":
         return f"{visual.title}\n\n{scene.narration}\n\n```mermaid\n{visual.payload}\n```"
+    if visual.type == "table":
+        return f"{visual.title}\n\n{scene.narration}".strip()
     if visual.payload.strip() == scene.narration.strip():
         return f"{visual.title}\n\n{scene.narration}".strip()
     return f"{visual.title}\n\n{scene.narration}\n\n{visual.payload}".strip()

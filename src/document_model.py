@@ -18,7 +18,7 @@ def build_document_model(
     source_dir: str | Path | None = None,
 ) -> DocumentModel:
     clean_text = strip_annotation_comments(text)
-    ast = mistune.create_markdown(renderer="ast")(clean_text)
+    ast = mistune.create_markdown(renderer="ast", plugins=["table"])(clean_text)
     segments = parse_markdown(text, max_chars_per_segment=0, source_dir=source_dir)
     explicit_keys_by_segment = _explicit_annotation_keys_by_segment(text, segments)
 
@@ -131,6 +131,17 @@ def _block_from_node(
         )
         block.list_items = items
         return block
+    if node_type == "table":
+        table_data = _extract_table_data(node)
+        return _make_block(
+            "table",
+            _table_summary_text(table_data),
+            segments,
+            current_segment,
+            segment_cursor,
+            explicit_keys_by_segment,
+            table_data=table_data,
+        )
     if node_type == "block_quote":
         return _make_block(
             "quote",
@@ -151,6 +162,7 @@ def _make_block(
     segment_cursor: int,
     explicit_keys_by_segment: dict[int, set[str]],
     language: str = "",
+    table_data: list[list[str]] | None = None,
 ) -> DocumentBlock:
     segment = _find_segment_containing(text, segments, current_segment, segment_cursor)
     return DocumentBlock(
@@ -159,6 +171,7 @@ def _make_block(
         language=language,
         source_segment_index=segment.index if segment else -1,
         annotations=_segment_annotations(segment, explicit_keys_by_segment),
+        table_data=table_data or [],
     )
 
 
@@ -331,3 +344,25 @@ def _extract_list_items(node: dict[str, Any]) -> list[str]:
         if text:
             items.append(text)
     return items
+
+
+def _extract_table_data(node: dict[str, Any]) -> list[list[str]]:
+    rows: list[list[str]] = []
+    for child in node.get("children", []) or []:
+        child_type = child["type"]
+        if child_type == "table_head":
+            rows.append(
+                [_extract_text(cell).strip() for cell in child.get("children", [])]
+            )
+        elif child_type == "table_body":
+            for row in child.get("children", []) or []:
+                rows.append(
+                    [_extract_text(cell).strip() for cell in row.get("children", [])]
+                )
+    return rows
+
+
+def _table_summary_text(table_data: list[list[str]]) -> str:
+    columns = len(table_data[0]) if table_data else 0
+    data_rows = max(0, len(table_data) - 1)
+    return f"这张表格包含 {columns} 列、{data_rows} 行数据。"

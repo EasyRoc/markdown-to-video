@@ -123,3 +123,19 @@ def test_tts_text_for_mermaid():
 
     assert "mermaid" not in text.lower()
     assert "graph LR" not in text
+
+
+def test_tts_text_for_table_uses_summary_not_raw_markdown():
+    seg = Segment(
+        0,
+        "模板",
+        2,
+        "table",
+        "模板\n\n这张表格包含 3 列、2 行数据。",
+    )
+    seg.table_data = [["类型", "模板", "效果"], ["列表", "列表页", "标题 + 圆点列表"]]
+
+    text = tts_text_for_segment(seg)
+
+    assert "这张表格包含" in text
+    assert "|" not in text
