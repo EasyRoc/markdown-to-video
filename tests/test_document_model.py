@@ -79,6 +79,35 @@ def test_unannotated_document_has_empty_annotations():
     assert model.sections[0].blocks[0].annotations == {}
 
 
+def test_explicit_default_valued_annotation_is_preserved():
+    md = '<!-- {"bgm_volume": 0.15, "layout": "text-only"} -->\n# Demo\n\nContent.'
+
+    model = build_document_model(md)
+
+    assert model.sections[0].annotations["bgm_volume"] == 0.15
+    assert model.sections[0].annotations["layout"] == "text-only"
+    assert model.sections[0].blocks[0].annotations["bgm_volume"] == 0.15
+    assert model.sections[0].blocks[0].annotations["layout"] == "text-only"
+
+
+def test_duplicate_headings_preserve_matching_explicit_default_annotations():
+    md = (
+        '<!-- {"layout": "text-only"} -->\n'
+        "# Repeat\n\n"
+        "Same content.\n\n"
+        '<!-- {"bgm_volume": 0.15} -->\n'
+        "# Repeat\n\n"
+        "Same content.\n"
+    )
+
+    model = build_document_model(md)
+
+    assert model.sections[0].annotations == {"layout": "text-only"}
+    assert model.sections[0].blocks[0].annotations == {"layout": "text-only"}
+    assert model.sections[1].annotations == {"bgm_volume": 0.15}
+    assert model.sections[1].blocks[0].annotations == {"bgm_volume": 0.15}
+
+
 def test_code_fence_info_uses_first_token_as_language():
     md = "```python linenums\nprint('hello')\n```"
 
