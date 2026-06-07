@@ -90,3 +90,71 @@ class TestLLMTeachingPipeline:
                 config,
             )
             assert assets.script.planner == "rules"
+
+
+class TestLLMPipelineIntegration:
+    """Integration tests requiring a real DeepSeek API key."""
+
+    def test_full_pipeline_dry_run_with_real_api(self):
+        """End-to-end: markdown to TeachingAssets using real DeepSeek API."""
+        import os
+        api_key = os.environ.get("DEEPSEEK_API_KEY")
+        if not api_key:
+            import pytest
+            pytest.skip("DEEPSEEK_API_KEY not set")
+
+        config = {
+            "llm": {
+                "api_key": api_key,
+                "model": "deepseek-chat",
+                "base_url": "https://api.deepseek.com",
+            },
+            "teaching_director": {
+                "enabled": True,
+                "planner": "llm",
+                "max_scenes_per_section": 6,
+            },
+        }
+
+        markdown = """\
+# Python Coroutines
+
+## What Are Coroutines
+
+Coroutines are functions that can pause and resume execution.
+Unlike regular functions, coroutines yield control during I/O operations.
+
+### Key Concepts
+
+- Coroutines use async/await keywords
+- Coroutines are scheduled by an event loop
+- Coroutines are lighter than threads
+
+## How to Use Coroutines
+
+First import asyncio, then define async functions:
+
+```python
+import asyncio
+
+async def fetch_data(url):
+    await asyncio.sleep(1)
+    return f"Data from {url}"
+```
+
+### Concurrent Execution
+
+Use asyncio.gather to run multiple coroutines concurrently.
+"""
+
+        assets = build_teaching_assets(markdown, config)
+        assert assets.script.planner == "llm"
+        assert len(assets.segments) > 0
+
+        svg_scenes = [
+            s for s in assets.storyboard.scenes
+            if s.visual.type == "svg"
+        ]
+        for scene in svg_scenes:
+            assert scene.visual.payload
+            assert "<svg" in scene.visual.payload
