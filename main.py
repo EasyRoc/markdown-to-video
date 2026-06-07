@@ -43,6 +43,11 @@ async def main() -> None:
         action="store_true",
         help="Use the V3 teaching director before rendering",
     )
+    parser.add_argument(
+        "--llm",
+        action="store_true",
+        help="Use LLM-powered semantic analysis (requires llm.api_key in config)",
+    )
     args = parser.parse_args()
 
     md_path = Path(args.markdown)
@@ -61,6 +66,8 @@ async def main() -> None:
     assets = None
 
     if args.v3:
+        if args.llm:
+            config["teaching_director"]["planner"] = "llm"
         assets = build_teaching_assets(text, config, source_dir=md_path.parent)
         segments = assets.segments
     else:
