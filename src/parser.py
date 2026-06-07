@@ -32,6 +32,7 @@ class Segment:
     bgm_volume: float = 0.15
     transition: str = "none"
     table_data: list[list[str]] | None = None
+    svg_code: str | None = None
 
 
 def parse_markdown(
@@ -269,6 +270,7 @@ def _copy_segment_with_text(segment: Segment, text: str) -> Segment:
         bgm_volume=segment.bgm_volume,
         transition=segment.transition,
         table_data=segment.table_data,
+        svg_code=segment.svg_code,
     )
 
 

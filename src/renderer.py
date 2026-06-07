@@ -19,6 +19,17 @@ def render_segment(segment: Segment, config: dict, cache_dir: str) -> str:
             segment.image_path = rendered
             segment.layout = "image-below"
 
+    if segment.svg_code:
+        from src.svg_renderer import render_svg_to_png
+
+        svg_output = cache_path / f"svg_{segment.index:04d}.png"
+        try:
+            render_svg_to_png(segment.svg_code, str(svg_output))
+            segment.image_path = str(svg_output)
+            segment.layout = "image-below"
+        except Exception:
+            segment.svg_code = None  # render failed, fallback to text-only
+
     if segment.image_path or segment.layout in {"image-right", "image-below", "image-full"}:
         resolved = resolve_image(segment, config, cache_path)
         if resolved:
