@@ -37,7 +37,7 @@ class OutlineSection:
     svg_intent: str = ""
 
     def has_svg(self) -> bool:
-        return bool(self.svg_types) and self.svg_types != ["none"]
+        return bool(self.svg_types) and "none" not in self.svg_types
 
 
 @dataclass
