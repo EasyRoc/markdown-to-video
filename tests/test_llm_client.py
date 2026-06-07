@@ -4,7 +4,7 @@ from src.llm_client import LLMClient
 
 
 class TestLLMClient:
-    def test_builds_messages_correctly(self):
+    def test_config_initialization(self):
         client = LLMClient({
             "llm": {
                 "api_key": "sk-test",

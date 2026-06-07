@@ -35,6 +35,7 @@ class LLMClient:
         return _parse_json(content)
 
     async def chat_with_retry(self, messages: list[dict], max_retries: int = 2) -> dict:
+        messages = list(messages)  # shallow copy to avoid mutating caller's list
         last_error = None
         for attempt in range(max_retries + 1):
             try:
