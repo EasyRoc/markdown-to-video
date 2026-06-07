@@ -30,6 +30,10 @@ def _scene_to_segment(index: int, scene: Scene) -> Segment:
         segment.layout = "table"
         segment.image_path = None
         segment.table_data = json.loads(visual.payload or "[]")
+    if visual.type == "svg":
+        segment.svg_code = visual.payload or None
+        if visual.payload:
+            segment.layout = "image-below"
     return segment
 
 
@@ -42,6 +46,8 @@ def _segment_type(scene: Scene) -> str:
         return "mermaid"
     if scene.visual.type == "table":
         return "table"
+    if scene.visual.type == "svg":
+        return "section"
     return "section"
 
 
