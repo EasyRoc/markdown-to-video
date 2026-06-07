@@ -1,5 +1,6 @@
 import pytest
 from pathlib import Path
+from xml.etree.ElementTree import ParseError
 from PIL import Image
 from src.svg_renderer import render_svg_to_png, inject_cjk_font
 
@@ -31,5 +32,5 @@ class TestRenderSvgToPng:
 
     def test_raises_on_broken_svg(self, tmp_path):
         output = tmp_path / "broken.png"
-        with pytest.raises(Exception):
+        with pytest.raises(ParseError):
             render_svg_to_png("not svg at all <<<", str(output))
