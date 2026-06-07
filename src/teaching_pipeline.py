@@ -1,8 +1,13 @@
+import asyncio
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 from src.document_model import build_document_model
+from src.llm_client import LLMClient, LLMError
+from src.outline_planner import OutlinePlanner
 from src.scene_adapter import storyboard_to_segments
+from src.scene_generator import SceneGenerator
 from src.storyboard import build_storyboard
 from src.storyboard_io import write_teaching_artifacts
 from src.teaching_models import (
@@ -62,11 +67,6 @@ def _build_with_llm(
     config: dict,
     source_dir: str | Path | None = None,
 ) -> TeachingAssets:
-    import asyncio
-    from src.llm_client import LLMClient, LLMError
-    from src.outline_planner import OutlinePlanner
-    from src.scene_generator import SceneGenerator
-
     document = build_document_model(text, source_dir=source_dir)
 
     try:
@@ -142,8 +142,8 @@ def _build_with_llm(
             segments=segments,
         )
 
-    except Exception:
-        # Fallback to rules planner on any LLM failure
+    except Exception as exc:
+        print(f"LLM pipeline failed ({exc}), falling back to rules planner", file=sys.stderr)
         return _build_with_rules(text, config, source_dir)
 
 
@@ -153,11 +153,18 @@ def _extract_section_texts(document: DocumentModel, outline) -> list[str]:
     for ol_sec in outline.sections:
         matched = ""
         for doc_sec in document.sections:
-            if doc_sec.heading == ol_sec.heading or ol_sec.heading in doc_sec.heading:
+            if doc_sec.heading == ol_sec.heading:
                 matched = "\n\n".join(
                     b.text for b in doc_sec.blocks if b.text.strip()
                 )
                 break
+        if not matched:
+            for doc_sec in document.sections:
+                if ol_sec.heading in doc_sec.heading:
+                    matched = "\n\n".join(
+                        b.text for b in doc_sec.blocks if b.text.strip()
+                    )
+                    break
         if not matched:
             matched = ol_sec.heading
         result.append(matched)

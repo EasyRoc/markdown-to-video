@@ -42,7 +42,7 @@ class TestLLMTeachingPipeline:
             },
         ]
 
-        with patch("src.llm_client.LLMClient") as mock_client_class:
+        with patch("src.teaching_pipeline.LLMClient") as mock_client_class:
             mock_client = AsyncMock()
             mock_client.chat_with_retry.side_effect = [mock_outline, mock_scenes]
             mock_client_class.return_value = mock_client
@@ -70,7 +70,7 @@ class TestLLMTeachingPipeline:
 
     def test_llm_failure_falls_back_to_rules(self):
         """When LLM fails, fall back to RulesTeachingPlanner."""
-        with patch("src.llm_client.LLMClient") as mock_client_class:
+        with patch("src.teaching_pipeline.LLMClient") as mock_client_class:
             mock_client_class.side_effect = Exception("API error")
 
             config = {
