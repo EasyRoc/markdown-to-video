@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from src.document_model import build_document_model
+from openai import OpenAIError
 from src.llm_client import LLMClient, LLMError
 from src.outline_planner import OutlinePlanner
 from src.scene_adapter import storyboard_to_segments
@@ -99,7 +100,7 @@ def _build_with_llm(
                 llm_scenes = asyncio.run(
                     scene_generator.generate(section, section_text, text)
                 )
-            except LLMError:
+            except (LLMError, OpenAIError):
                 llm_scenes = []
 
             for ls in llm_scenes:

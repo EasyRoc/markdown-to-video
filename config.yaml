@@ -65,11 +65,6 @@ teaching_director:
   diagrams:
     enabled: true
     prefer_mermaid: true
-  llm:
-    enabled: true
-    provider: "deepseek"
-    model: "deepseek-chat"
-    timeout_seconds: 60
 
 llm:
   api_key: ""
