@@ -4,11 +4,11 @@ set -euo pipefail
 if [ $# -lt 1 ]; then
     echo "Usage: ./run.sh <markdown-file>"
     echo ""
-    echo "Environment:"
-    echo "  DEEPSEEK_API_KEY   DeepSeek API key (required)"
+    echo "Setup:"
+    echo "  cp .env.example .env"
+    echo "  # Edit .env and fill in your DEEPSEEK_API_KEY"
     echo ""
     echo "Example:"
-    echo "  export DEEPSEEK_API_KEY=sk-xxx"
     echo "  ./run.sh article.md"
     exit 1
 fi
@@ -20,14 +20,22 @@ if [ ! -f "$MD_FILE" ]; then
     exit 1
 fi
 
-if [ -z "${DEEPSEEK_API_KEY:-}" ]; then
-    echo "Error: DEEPSEEK_API_KEY is not set"
-    echo "  export DEEPSEEK_API_KEY=sk-xxx"
-    exit 1
-fi
-
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
+
+# Load .env file if it exists
+if [ -f ".env" ]; then
+    set -a
+    source .env
+    set +a
+fi
+
+if [ -z "${DEEPSEEK_API_KEY:-}" ]; then
+    echo "Error: DEEPSEEK_API_KEY is not set"
+    echo "  cp .env.example .env"
+    echo "  # Edit .env and fill in your API key"
+    exit 1
+fi
 
 echo "==> Generating video from: $MD_FILE"
 echo ""
