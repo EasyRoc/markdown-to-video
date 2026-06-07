@@ -94,6 +94,8 @@ Full Article Context (for reference only):
             {"role": "user", "content": user_prompt},
         ]
         data = await self._client.chat_with_retry(messages)
+        if not isinstance(data, list):
+            raise TypeError(f"Expected JSON array from LLM, got {type(data).__name__}")
         return _parse_scenes(data)
 
 
